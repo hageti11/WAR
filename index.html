@@ -222,23 +222,25 @@ function tracer(a,b,c){const l=new T.Line(new T.BufferGeometry().setFromPoints([
 function hurt(d){d*=[.6,1,1.5][dif]*(drv?.4:1);P.hp-=d;shake=.5;if(lastAtk){const a=Math.atan2(lastAtk.x-P.x,-(lastAtk.z-P.z))+P.yaw,e=$("#dd");e.style.transform=`translate(-50%,-50%) rotate(${a}rad)`;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,600)}$("#dmg").style.opacity=1;setTimeout(()=>$("#dmg").style.opacity=Math.max(0,.6-P.hp/100),120)}
 function aiShoot(s,tg,dist){
  const mz=new T.Vector3(s.x,H(s.x,s.z)+1.3,s.z);const isP=tg===P;const ty=H(tg.x,tg.z)+(isP?1.4:1.1);
- const p=(s.sn?.5:cl(.5-dist/130,.06,.45))*(isP?.85:1);
+ const p=(s.sn?.5:cl(.5-dist/130,.06,.45))*(isP?.85*[.8,1,1.25][dif]*(Math.hypot(mv.x,mv.y)>.5?.8:1):1);
  s.sp=3;if(isP)lastAtk=s;if(s.sn&&isP&&!snSaid){snSaid=1;say("狙撃手だ！ 遮蔽へ入れ！",3)}const hit=Math.random()<p,sp=hit?0:R(-1.4,1.4);
  if(Math.hypot(s.x-P.x,s.z-P.z)<130&&((s.tn=(s.tn||0)+1)%2===0||isP))tracer(mz,new T.Vector3(tg.x+sp,ty+R(-.3,.3),tg.z+sp),s.team?0xfff0b0:0xffb060);
  bang(cl(1-dist/150,0,1)*(s.team?.5:.7),!s.team);
  if(hit){if(isP)hurt(R(4,9)*(s.mg?1.6:s.sn?3.2:1));else{if(tg===drv){lastAtk=s;hurt(R(2,5))}tg.hp-=R(25,40)*(s.veh?1.3:1);if(tg.hp<=0)kill(tg,false)}}
 }
 function kill(s,byP,head){if(s.dead)return;if(!byP&&s.team&&!s.veh&&!s.dnUsed&&Math.random()<.6){s.dnUsed=1;s.dn=30;s.hp=1;say((s.nm||"味方")+"が負傷した！ 近づいて救助しろ！",3.5);return}s.dead=true;if(s.veh){boom(new T.Vector3(s.x,H(s.x,s.z)+1,s.z));if(s===drv)exitVeh()}if(s.hvt){hold=MS[mi].hold;wt=3;say(MS[mi].bh,7)}if(byP){kills++;if(!s.team)dropPk(s.x,s.z);if(head)heads++}else if(s.team){say((s.nm||"味方")+"がやられた！ 衛生兵！",3)}}
-function upd(s,dt){if(s===drv)return;if(!s.alert&&!s.team&&(s.x-P.x)**2+(s.z-P.z)**2>90000){s.g.visible=false;return}s.sp-=dt;if(s.dn>0){s.dn-=dt;s.g.rotation.x=-1.25;s.g.position.set(s.x,H(s.x,s.z)+.15,s.z);if(s.dn<=0){s.dn=0;kill(s,false)}return}if(dropAlt>0&&s.team&&!s.veh){s.g.position.set(s.x,H(s.x,s.z)+Math.max(0,dropAlt+(s.cdo||0)),s.z);return}
+function upd(s,dt){if(s===drv)return;if(!s.alert&&!s.team&&(s.x-P.x)**2+(s.z-P.z)**2>90000){s.g.visible=false;return}s.sp-=dt;s.hit=(s.hit||0)-dt;if(s.hpl===undefined)s.hpl=s.hp;if(s.hp<s.hpl-1){s.hit=2.5;if(!s.team)s.alert=true}s.hpl=s.hp;if(!s.team&&s.alert&&!s.al0){s.al0=true;for(const o of sold)if(!o.team&&!o.alert&&!o.dead&&(o.x-s.x)**2+(o.z-s.z)**2<1600)o.alert=true;if(!s.mg&&!s.sn&&!s.rpg&&Math.random()<.35)s.flk=Math.random()<.5?1:-1}if(s.dn>0){s.dn-=dt;s.g.rotation.x=-1.25;s.g.position.set(s.x,H(s.x,s.z)+.15,s.z);if(s.dn<=0){s.dn=0;kill(s,false)}return}if(dropAlt>0&&s.team&&!s.veh){s.g.position.set(s.x,H(s.x,s.z)+Math.max(0,dropAlt+(s.cdo||0)),s.z);return}
  const g=s.g;
  if(s.dead){s.fall=Math.min(1,s.fall+dt*2.4);g.rotation.x=s.veh?0:-s.fall*1.5;g.position.y=H(s.x,s.z)+s.fall*.15;s.rm-=dt;if(s.rm<0){scene.remove(g);s.gone=true}return}
- s.bt=(s.bt||0)-dt;if(s.bt<=0||(s.tgc&&(s.tgc.dead||s.tgc.dn>0))){s.bt=R(.2,.35);let tg0=null,td0=1e9;for(const o of sold){if(o.dead||o.dn>0||o.team===s.team||(dropAlt>0&&o.team))continue;const d=(o.x-s.x)**2+(o.z-s.z)**2;if(d<td0){td0=d;tg0=o}}if(!s.team&&dropAlt<=0){const d=(P.x-s.x)**2+(P.z-s.z)**2;if(d<td0){td0=d;tg0=P}}s.tgc=tg0}
+ s.bt=(s.bt||0)-dt;if(s.bt<=0||(s.tgc&&(s.tgc.dead||s.tgc.dn>0))){s.bt=R(.2,.35);let tg0=null,td0=1e9;for(const o of sold){if(o.dead||o.dn>0||o.team===s.team||(dropAlt>0&&o.team))continue;const d=((o.x-s.x)**2+(o.z-s.z)**2)*(o.rpg||o.mg||o.sn?.4:1);if(d<td0){td0=d;tg0=o}}if(!s.team&&dropAlt<=0){const d=(P.x-s.x)**2+(P.z-s.z)**2;if(d<td0){td0=d;tg0=P}}s.tgc=tg0}
  let tg=s.tgc||null,td=tg?Math.hypot(tg.x-s.x,tg.z-s.z):1e9;
  let mvx=0,mvz=0,sp=0;
  if(s.team){
-  const dp=Math.hypot(P.x-s.x,P.z-s.z);
-  if(s.go&&!landing){const dx=s.go[0]-s.x,dz=s.go[1]-s.z,l=Math.hypot(dx,dz);if(l>2.5){mvx=dx/l;mvz=dz/l;sp=4.6;fa2(s,mvx,mvz)}else{s.go=null;s.hold=true}}
-  else if(tg&&td<55&&lc(s,tg)){fa(s,tg,dt);fire(s,tg,td,dt,.35,.7)}
+  const dp=Math.hypot(P.x-s.x,P.z-s.z),pm0=s.md!==undefined?s.md:(LT?2:0),mw=(s.medic&&!s.hold)?((s.mt0&&!s.mt0.dead&&(s.mt0.dn>0||s.mt0.hp<45))?s.mt0:(s.mt0=medTgt(s))):null;
+  if(mw&&!landing&&!s.go){const dx=mw.x-s.x,dz=mw.z-s.z,l=Math.hypot(dx,dz);if(l>2.2){mvx=dx/l;mvz=dz/l;sp=5;fa2(s,mvx,mvz)}else{s.mtc=(s.mtc||0)+dt;if(s.mtc>2){s.mtc=0;if(mw.dn>0){mw.dn=0;mw.hp=45;mw.g.rotation.x=0;say((s.nm||"衛生兵")+":「"+(mw.nm||"味方")+"を救助した！」",2.5)}else mw.hp=Math.min(mw.hp+35,70)}}}
+  else if(s.go&&!landing){const dx=s.go[0]-s.x,dz=s.go[1]-s.z,l=Math.hypot(dx,dz);if(l>2.5){mvx=dx/l;mvz=dz/l;sp=4.6;fa2(s,mvx,mvz)}else{s.go=null;s.hold=true}}
+  else if(tg&&td<55&&lc(s,tg)){fa(s,tg,dt);fire(s,tg,td,dt,.35,.7);const cv=(s.gun||s.veh)?null:cvr(s,tg,td,dt);if(cv){mvx=cv[0];mvz=cv[1];sp=cv[2]}else if(!s.inc&&pm0===2&&td>25&&(((s.sqd||0)+Math.floor(tm/5))&1)===0){mvx=(tg.x-s.x)/td;mvz=(tg.z-s.z)/td;sp=3}
+   if(s.rk!==undefined&&s.kd!=="MED"){s.gt=(s.gt||R(8,16))-dt;if(s.gt<=0&&td>14&&td<38&&(tg.mg||tg.rpg||tg.sn||Math.random()<.25)){s.gt=R(10,20);thrE(s,tg)}}}
   else if(!landing&&!s.hold){let tx,tz,spd=3.2;const pm=s.md!==undefined?s.md:(LT?2:0);if(pm===2){const w=WP[Math.min(stage,2)];tx=w[0]+s.off[0]*2+((s.pl||0)-1)*12;tz=w[1]+s.off[1]*2;spd=3.6}else if(pm===0&&dp>6){tx=P.x+s.off[0];tz=P.z+s.off[1];spd=dp>20?5.2:3.2}
    if(tx!==undefined){const dx=tx-s.x,dz=tz-s.z,l=Math.hypot(dx,dz);if(l>2.5){mvx=dx/l;mvz=dz/l;sp=spd;fa2(s,mvx,mvz)}}}
  }else{
@@ -246,23 +248,26 @@ function upd(s,dt){if(s===drv)return;if(!s.alert&&!s.team&&(s.x-P.x)**2+(s.z-P.z
   if(s.alert&&tg){
    fa(s,tg,dt);const vis=td<(s.mg?95:s.sn?125:70)&&lc(s,tg);
    const dx=tg.x-s.x,dz=tg.z-s.z,l=Math.hypot(dx,dz)||1;
-   if(td>(vis?26:6)){mvx=dx/l;mvz=dz/l;sp=2.7}else{s.sdT-=dt;if(s.sdT<0){s.sd=-s.sd;s.sdT=R(1.2,3)}mvx=-dz/l*s.sd;mvz=dx/l*s.sd;sp=1.7}
+   const cv=(vis&&!s.mg&&!s.sn)?cvr(s,tg,td,dt):null;if(cv){mvx=cv[0];mvz=cv[1];sp=cv[2]}
+   else if(s.inc&&vis){}
+   else if(s.flk&&td>30&&!s.fld){const px=-dz/l*s.flk,pz=dx/l*s.flk;mvx=dx/l*.4+px*.9;mvz=dz/l*.4+pz*.9;const m2=Math.hypot(mvx,mvz)||1;mvx/=m2;mvz/=m2;sp=3;s.flt=(s.flt||0)+dt;if(s.flt>5)s.fld=true}
+   else if(td>(vis?26:6)){mvx=dx/l;mvz=dz/l;sp=2.7}else{s.sdT-=dt;if(s.sdT<0){s.sd=-s.sd;s.sdT=R(1.2,3)}mvx=-dz/l*s.sd;mvz=dx/l*s.sd;sp=1.7}
    if(vis){fire(s,tg,td,dt,.2,.5);s.gt=(s.gt||R(6,14))-dt;if(s.gt<=0&&td>10&&td<36&&!s.mg){s.gt=R(9,18);thrE(s,tg)}if(s.rpg){s.rt=(s.rt||R(5,10))-dt;if(s.rt<=0&&td>22&&td<85){s.rt=R(8,12);rpgFire(s,tg)}}}
-  }else{s.ph+=dt*.5;g.rotation.y+=Math.sin(s.ph)*dt*.2}
+  }else if(SND.r&&tm-SND.t<5&&!s.mg&&!s.sn&&(SND.x-s.x)**2+(SND.z-s.z)**2<SND.r*SND.r){const dx=SND.x-s.x,dz=SND.z-s.z,l=Math.hypot(dx,dz)||1;mvx=dx/l;mvz=dz/l;sp=2.3;fa2(s,mvx,mvz);if(l<22)s.alert=true}else{s.ph+=dt*.5;g.rotation.y+=Math.sin(s.ph)*dt*.2}
  }
- if(s.mg||s.sn)sp=0;if(sp){step(s,mvx*sp*dt,mvz*sp*dt,s.rad===undefined?.4:s.rad);s.ph+=dt*sp*2.4;s.by=Math.abs(Math.sin(s.ph))*.06}else s.by=0;const la=sp?Math.sin(s.ph)*.7:0;s.legs[0].rotation.x=la;s.legs[1].rotation.x=-la;
- g.position.set(s.x,H(s.x,s.z)+s.by+(landing&&s.team?1.3+(P.z-33)*.35:0),s.z);g.visible=(s.x-P.x)**2+(s.z-P.z)**2<28000;
+ if(s.mg||s.sn)sp=0;if(sp){if(s.sw>0){s.sw-=dt;const t0=mvx;mvx=-mvz*s.swd;mvz=t0*s.swd}const ox0=s.x,oz0=s.z;step(s,mvx*sp*dt,mvz*sp*dt,s.rad===undefined?.4:s.rad);if(Math.hypot(s.x-ox0,s.z-oz0)<sp*dt*.25){s.stk=(s.stk||0)+dt;if(s.stk>.6){s.stk=0;s.sw=.9;s.swd=Math.random()<.5?1:-1}}else s.stk=0;s.ph+=dt*sp*2.4;s.by=Math.abs(Math.sin(s.ph))*.06}else s.by=0;const la=sp?Math.sin(s.ph)*.7:0;s.legs[0].rotation.x=la;s.legs[1].rotation.x=-la;
+ g.position.set(s.x,H(s.x,s.z)+s.by+(landing&&s.team?1.3+(P.z-33)*.35:0),s.z);g.visible=(s.x-P.x)**2+(s.z-P.z)**2<28000;if(!tg||td>75){s.inc=false;s.cv=null}g.scale.y=s.inc&&((s.pk||0)%3)>=1.6?.7:1;
 }
 function fa(s,t,dt){const a=Math.atan2(t.x-s.x,t.z-s.z);let d=a-s.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));s.g.rotation.y+=d*Math.min(1,dt*8)}
 function fa2(s,x,z){s.g.rotation.y=Math.atan2(x,z)}
-function fire(s,tg,dist,dt,c0,c1){if(s.sn){s.cool-=dt;if(s.cool>0)return;s.cool=R(2.4,3.6);aiShoot(s,tg,dist);return}
+function fire(s,tg,dist,dt,c0,c1){if(s.inc&&(s.pk%3)>=1.6)return;if(s.sn){s.cool-=dt;if(s.cool>0)return;s.cool=R(2.4,3.6);aiShoot(s,tg,dist);return}
  s.cool-=dt;if(s.cool>0)return;
  if(s.burst<=0){const f=s.mg||s.veh||s.gun;s.burst=Math.floor(f?R(8,16):R(3,7));s.cool=f?R(.5,1.1):R(.8,1.8);return}
  s.burst--;s.cool=(s.mg||s.veh||s.gun)?.085:R(c0,c1)*.55;aiShoot(s,tg,dist);
 }
 /* ---------- 射撃 ---------- */
 function shoot(){
- cd=.085;ammo--;sf++;if(!sup){for(const q of sold)if(!q.team&&!q.dead&&!q.alert&&Math.hypot(q.x-P.x,q.z-P.z)<45)q.alert=true}kick=1;heat=Math.min(1,heat+.08);flash=.05;mflash.material.opacity=1;mlight.intensity=3;mflash.rotation.z=R(0,6);
+ cd=.085;ammo--;sf++;SND.x=P.x;SND.z=P.z;SND.t=tm;SND.r=sup?25:95;if(!sup){for(const q of sold)if(!q.team&&!q.dead&&!q.alert&&Math.hypot(q.x-P.x,q.z-P.z)<45)q.alert=true}kick=1;heat=Math.min(1,heat+.08);flash=.05;mflash.material.opacity=1;mlight.intensity=3;mflash.rotation.z=R(0,6);
  P.pitch+=R(.003,.009)*(1+heat);P.yaw+=R(-.004,.004);
  const sp=(.006+(Math.hypot(mv.x,mv.y)>.1?.012:0)+heat*.02)*(1-.55*adsK);
  const dir=new T.Vector3(R(-sp,sp),R(-sp,sp),-1).applyQuaternion(cam.quaternion).normalize(),o=cam.position.clone();
@@ -282,7 +287,7 @@ function startReload(){if(reload>0||res<=0||ammo>=msz)return;reload=2.2;bang(.12
 function throwG(){if(st!=="play"||drv||nade<=0||gcd>0)return;nade--;gcd=1;
  const d=new T.Vector3(0,.22,-1).applyQuaternion(cam.quaternion).normalize(),m=new T.Mesh(new T.SphereGeometry(.07,6,6),new T.MeshLambertMaterial({color:0x2a3320}));
  m.position.copy(cam.position).addScaledVector(d,.5);scene.add(m);gl.push({m,v:d.multiplyScalar(15),t:2.3})}
-function boom(p){
+function boom(p){SND.x=p.x;SND.z=p.z;SND.t=tm;SND.r=140;
  bang(1,false);setTimeout(()=>bang(.7,true),60);
  const e=new T.Mesh(new T.SphereGeometry(1,10,8),new T.MeshBasicMaterial({color:0xffaa40,transparent:true,opacity:.9,depthWrite:false}));e.position.copy(p);scene.add(e);bl.position.copy(p);fx.push({e,t:.45});
  for(const s of sold){if(s.dead)continue;const d=Math.hypot(s.x-p.x,s.z-p.z);if(d<9){s.hp-=170*(1-d/9);s.alert=true;if(s.hp<=0)kill(s,!s.team,false)}}
@@ -307,7 +312,7 @@ function swap(){if(reload>0||st!=="play"||drv)return;WS[wpn]=[ammo,res];wpn=(wpn
 function toggleSq(){if(st!=="play")return;if(role===2){say("一隊員には部隊への指示権限がない。小隊長の命令に従え",2.5);return}
  const U=cu();if(!U.length){say("指示対象の部隊がいない",2);return}const nx=((U[0].md===undefined?(LT?2:0):U[0].md)+1)%3;for(const q of U){q.md=nx;q.go=null;q.hold=false}
  say((LT?TN[role][ptg]:"全員")+":"+["続け！","その場で待機！","前進！ 目標へ向かえ！"][nx],2)}
-function shotgun(){cd=.9;for(const q of sold)if(!q.team&&!q.dead&&Math.hypot(q.x-P.x,q.z-P.z)<55)q.alert=true;ammo--;sf++;kick=2.2;heat=0;flash=.06;mflash.material.opacity=1;mlight.intensity=4;P.pitch+=.03;
+function shotgun(){cd=.9;SND.x=P.x;SND.z=P.z;SND.t=tm;SND.r=100;for(const q of sold)if(!q.team&&!q.dead&&Math.hypot(q.x-P.x,q.z-P.z)<55)q.alert=true;ammo--;sf++;kick=2.2;heat=0;flash=.06;mflash.material.opacity=1;mlight.intensity=4;P.pitch+=.03;
  const o=cam.position.clone(),ms=[],dm=new Map();for(const q of sold)if(!q.dead&&!q.team)ms.push(...q.meshes);
  for(let i=0;i<8;i++){const dir=new T.Vector3(R(-.06,.06),R(-.05,.05),-1).applyQuaternion(cam.quaternion).normalize();rc.set(o,dir);rc.far=45;const h=rc.intersectObjects(ms,false)[0];
   if(h&&!blocked(o.x,o.z,dir.x,dir.z,h.distance)&&!tb(o,dir,h.distance)){const q=h.object.userData.s;dm.set(q,(dm.get(q)||0)+(h.object.userData.head?60:24))}}
@@ -387,7 +392,7 @@ function huts(){if(HT)scene.remove(HT);HT=new T.Group();const gb=new T.BoxGeomet
 function newMap(M){const b=BIO[Math.floor(Math.random()*4)];MN=b[0];MP={f1:R(.02,.04),f2:R(.015,.03),f3:R(.03,.06),f4:R(.005,.02),p1:R(0,6),p2:R(0,6),p3:R(0,6),A:R(3,8),B:R(1.5,3.5),den:b[1],hue:b[2],sat:b[3],lit:b[4],tr:b[5],ts:b[6],bh:b[7],bs:b[8],rain:Math.random()<.3?1:0};
  terrain();replant(M.st[0],M.st[1]);huts();MN+=" ／ 起伏"+(MP.A>6?"大":MP.A>4.5?"中":"小")}
 function equip(n){WS[wpn]=[ammo,res];wpn=n;[ammo,res]=WS[wpn];msz=[20,6,5][n];for(const c of wp.children){if(c===mflash||c.isLight)continue;c.visible=c.userData.sg?wpn===1:c.userData.sn?wpn===2:wpn===0}}
-function sniper(){cd=1.25;ammo--;sf++;kick=2.5;flash=.05;mflash.material.opacity=0;mlight.intensity=2.5;P.pitch+=.012;
+function sniper(){cd=1.25;SND.x=P.x;SND.z=P.z;SND.t=tm;SND.r=sup?35:120;ammo--;sf++;kick=2.5;flash=.05;mflash.material.opacity=0;mlight.intensity=2.5;P.pitch+=.012;
  if(!sup){for(const q of sold)if(!q.team&&!q.dead&&Math.hypot(q.x-P.x,q.z-P.z)<75)q.alert=true}
  const sp=ads?.0006:.02,dir=new T.Vector3(R(-sp,sp),R(-sp,sp),-1).applyQuaternion(cam.quaternion).normalize(),o=cam.position.clone();rc.set(o,dir);rc.far=300;
  const ms=[];for(const q of sold)if(!q.dead&&!q.team)ms.push(...q.meshes);const h=rc.intersectObjects(ms,false)[0];let dist=280;
@@ -416,7 +421,7 @@ function drive(dt,ix,iy){const v=drv;vsp+=iy<-.1?(-iy)*10*dt:iy>.1?-iy*14*dt:0;v
  P.x=v.x;P.z=v.z;const f=H(v.x-Math.sin(vh)*2,v.z-Math.cos(vh)*2),b=H(v.x+Math.sin(vh)*2,v.z+Math.cos(vh)*2);
  v.g.position.set(v.x,H(v.x,v.z),v.z);v.g.rotation.set(-Math.atan((f-b)/4),vh-Math.PI,0);v.g.visible=true;
  if(Math.abs(vsp)>5)for(const q of sold)if(!q.team&&!q.dead&&Math.hypot(q.x-v.x,q.z-v.z)<2.4){q.hp-=200;q.alert=true;kill(q,true,false)}}
-function vgun(){cd=.09;kick=.3;flash=.04;shake=Math.max(shake,.05);const sp=.012,dir=new T.Vector3(R(-sp,sp),R(-sp,sp),-1).applyQuaternion(cam.quaternion).normalize(),o=cam.position.clone();rc.set(o,dir);rc.far=200;
+function vgun(){cd=.09;SND.x=P.x;SND.z=P.z;SND.t=tm;SND.r=110;kick=.3;flash=.04;shake=Math.max(shake,.05);const sp=.012,dir=new T.Vector3(R(-sp,sp),R(-sp,sp),-1).applyQuaternion(cam.quaternion).normalize(),o=cam.position.clone();rc.set(o,dir);rc.far=200;
  const ms=[];for(const q of sold)if(!q.dead&&!q.team)ms.push(...q.meshes);const h=rc.intersectObjects(ms,false)[0];let dist=180;
  if(h&&!blocked(o.x,o.z,dir.x,dir.z,h.distance)&&!tb(o,dir,h.distance)){dist=h.distance;const q=h.object.userData.s,hd=h.object.userData.head;q.hp-=hd?200:40;q.alert=true;q.sp=4;mc=.15;$("#hm").style.opacity=1;if(q.hp<=0)kill(q,true,hd)}
  tracer(o.clone().addScaledVector(dir,2).add(new T.Vector3(0,-.4,0)),o.clone().addScaledVector(dir,dist),0xffe090);bang(.8,false)}
@@ -452,6 +457,12 @@ function chooseRole(mn){const M=MS[mn];if(M.big===0){role=1;brief(mn);return}con
  const D=[["中隊長","CAPTAIN","3個小隊(約30名)を指揮。UNITで小隊を選び、ORDERとCMDで命令する。"],["小隊長","LIEUTENANT","第1小隊(約10名)を指揮。分隊ごとに指示。他の小隊は自動で前進する。"],["一隊員","RIFLEMAN","第1小隊の一員。命令は小隊長が出す。自分の判断で戦え。"]];
  $("#rl").innerHTML=D.map((r,i)=>`<button class="mb" data-r="${i}"><b>${r[1]}</b><span>${r[0]}</span><small>${r[2]}</small></button>`).join("");
  document.querySelectorAll("#rl .mb").forEach(b=>b.onclick=()=>{role=+b.dataset.r;brief(mn)})}
+let SND={x:0,z:0,t:-9,r:0};
+function findCover(s,tg){let best=null,bd=1e9;for(const c of tr){const dx=c.x-s.x,dz=c.z-s.z,d2=dx*dx+dz*dz;if(d2>400||d2<4)continue;
+  const ex=c.x-tg.x,ez=c.z-tg.z,l=Math.hypot(ex,ez)||1,px=c.x+ex/l*(c.r+.9),pz=c.z+ez/l*(c.r+.9),dd=(px-s.x)**2+(pz-s.z)**2;if(dd<bd){bd=dd;best=[px,pz]}}return best}
+function cvr(s,tg,td,dt){s.cvT=(s.cvT||0)-dt;if(s.cvT<=0){s.cvT=R(3,6);s.cv=((s.hit>0||Math.random()<.45)&&td>12)?findCover(s,tg):null}
+ if(!s.cv){s.inc=false;return null}const dx=s.cv[0]-s.x,dz=s.cv[1]-s.z,l=Math.hypot(dx,dz);if(l>1.2){s.inc=false;return[dx/l,dz/l,3.6]}s.inc=true;s.pk=(s.pk||0)+dt;return null}
+function medTgt(s){let b=null,bd=3600;for(const q of sold){if(!q.team||q.veh||q.dead||q===s)continue;if(q.dn>0||q.hp<45){const d=(q.x-s.x)**2+(q.z-s.z)**2;if(d<bd){bd=d;b=q}}}return b}
 function bindM(){document.querySelectorAll(".mb").forEach(b=>b.onclick=()=>b.dataset.k?brief(+b.dataset.m):chooseRole(+b.dataset.m))}
 function thrE(s,tg){const ft=1.5,y0=H(s.x,s.z)+1.5,dy=H(tg.x,tg.z)-y0,m=new T.Mesh(new T.SphereGeometry(.07,6,6),new T.MeshLambertMaterial({color:0x5a5a30}));
  m.position.set(s.x,y0,s.z);scene.add(m);gl.push({m,v:new T.Vector3((tg.x-s.x)/ft+R(-1.5,1.5),(dy+9*ft*ft)/ft,(tg.z-s.z)/ft+R(-1.5,1.5)),t:2.4});if(tg===P)say("手榴弾！ 伏せろ！",2)}
@@ -607,7 +618,7 @@ $("#ov").innerHTML=`<h1>ENDURING DUST</h1><h2>2001 ― アフガニスタン</h2
 移動:左スティック(強く倒すとダッシュ)／視点:右画面ドラッグ\nFIRE=射撃 ／ RELOAD=再装填\nPC: WASD・マウス・クリック・R・Shift\n
 手榴弾=💣ボタン/Gキー ／ 照準=AIM/右クリック ／ 航空支援=✈/F
 
-UPDATE 2.3:役職選択(中隊長/小隊長/一隊員)・3個小隊編成・階級と氏名・小隊単位の指示(UNIT/U)
+UPDATE 2.4:役職選択(中隊長/小隊長/一隊員)・3個小隊編成・階級と氏名・小隊指示(UNIT/U)・賢いAI(遮蔽・迂回・交互躍進・衛生兵・音への反応)
 ※フィクションです。横向きプレイ推奨。音が出ます。</p><div id="mlist"></div>`;
 loadSet();drawM();loop();
 </script>
